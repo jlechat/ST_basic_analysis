@@ -7,6 +7,9 @@ library(tidyverse)
 library(zoo)
 library(tseries)
 library(fUnitRoots)
+library(astsa)
+library(forecast)
+library(portes)
 
 #0- DATA IMPORTATION AND FORMATING ----
 
@@ -92,3 +95,38 @@ adf<-adfTest_valid(data[,extraction_gaz_naturel_diff], 24, type="nc")
 x<-na.remove(extraction_gaz_naturel_diff)
 par(mfrow=c(1,2))
 acf(x);pacf(x)
+
+
+
+#METHODE SLIDE PROF -----
+plot(diff(data[,extraction_gaz_naturel]))
+
+#tests ? bien revoir les spécifications
+
+pp.test(data[,extraction_gaz_naturel])
+adf.test(data[,extraction_gaz_naturel])
+kpss.test(data[,extraction_gaz_naturel])
+
+
+pp.test(diff(data[,extraction_gaz_naturel]))
+adf.test(diff(data[,extraction_gaz_naturel]))
+kpss.test(diff(data[,extraction_gaz_naturel]))
+
+
+acf(diff(data[,extraction_gaz_naturel]))
+#q=3
+pacf(diff(data[,extraction_gaz_naturel]))
+
+#il semble y avoir une saisonalité ? plusieurs ?
+#p=8
+
+
+res38<-sarima(data[,extraction_gaz_naturel], 3,1,8, details= TRUE)
+
+
+LjungBox(res38$fit)
+#checkresiduals(res38$fit)
+
+AIC(res38$fit)
+
+#autoplot(forecast(res38$fit))
