@@ -2,7 +2,7 @@
 title: 'Linear Time Series Assignment : ARIMA modelling of a time series'
 author: "Solène MORO & Jonas LECHAT"
 date: "2024-04"
-output: html_document
+output: pdf_document
 ---
 
 
@@ -87,12 +87,14 @@ ggplot(data, aes(x = DATE, y = extraction_petrole_diff)) +
 
 # PART 2 : ARMA models
 ## Question 4
-
+We realise the ACF and PCF analysis : 
 ```{r, echo=FALSE}
 acf(diff(data[,extraction_petrole]))
 pacf(diff(data[,extraction_petrole]))
 ```
-
+The ACF suggests that we test the ARMA models for which q is lower or equal to 4.
+The PCF suggests that we test the ARMA models for which p is lower or equal to  too.
+Thus, We have to test the significancy of the coefficients for all ARIMA(p,1,q)  models for p and q between 0 and 4 :
 ```{r, include=FALSE}
 for (i in 0:4) {
   sarima(data[,extraction_petrole], 4,1,i, details= FALSE)
@@ -102,7 +104,7 @@ for (i in 0:4) {
   sarima(data[,extraction_petrole], 0,1,i, details= FALSE)
 }
 ```
-
+We decide to reject the model if the p-values of some coefficients are higher than 5%. Thus, we keep for now the following models : 
 ```{r, echo=FALSE}
 res20<-sarima(data[,extraction_petrole], 2,1,0, details= FALSE)
 res10<-sarima(data[,extraction_petrole], 1,1,0, details= FALSE)
