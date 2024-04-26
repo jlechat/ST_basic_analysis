@@ -6,7 +6,6 @@ output: html_document
 ---
 
 
-
 ```{r packages, include=FALSE}
 library(insee)
 library(data.table)
@@ -28,21 +27,18 @@ data<-data[order(as.Date(data$DATE)),]
 ```
 
 
-# PART 1: the data
-## Question 1
-
-
+# PART 1: The data
+## Question 1 :
+The data is a time series of INSEE representing the variation in extraction of crude oil, using the average for 2021 as a reference, at base 100. The series can be find on the INSEE website, it is called "Indice CVS-CJO de la production industrielle (base 100 en 2021) - Extraction de pétrole brut (NAF rév. 2, niveau groupe, poste 06.10)"
 
 
 ## Question 2
 
 
-Stationnarité des données brutes ? Il faut inclure une constante et un trend dans le test ADF
-
 ```{r}
 summary(lm(extraction_petrole~DATE, data=data))
 ```
-
+We did 3 tests to test the stationarity of our series . The Philips Perron test, KPSS test and Dickey Fuller test (where we have included a constant and a trend) :
 
 ```{r, echo=FALSE, warning=FALSE}
 pp.test(data[,extraction_petrole])
@@ -50,19 +46,20 @@ adfTest(data[,extraction_petrole], type="ct")
 kpss.test(data[,extraction_petrole])
 ```
 
-Non stationnaire
+ All tests reject the stationarity at the 1% level. The series is thus non stationary, this confirms what we can see on its graph on question 3.
 
-Différance stationnaire ?
+We therefore chose to use the first difference method to make our series stationary, and its stationarity was thus verified by the three tests :
+
 
 ```{r, echo=FALSE, warning=FALSE}
 pp.test(diff(data[,extraction_petrole]))
 adf.test(diff(data[,extraction_petrole]))
 kpss.test(diff(data[,extraction_petrole]))
 ```
-Oui.
+
 
 ## Question 3
-
+ We can see graphically that the transformation of the series using the first difference method makes the series stationary:
 ```{r, echo=FALSE}
 ggplot(data, aes(x = DATE, y = extraction_petrole)) +
   geom_line(color = "blue") +  
@@ -82,13 +79,13 @@ data[DATE>"1990-01-01", extraction_petrole_diff:=diff_petrole]
 ```{r, echo=FALSE, warning=FALSE}
 ggplot(data, aes(x = DATE, y = extraction_petrole_diff)) +
   geom_line(color = "blue") +  
-  labs(title = "First differance of the oil extraction",
+  labs(title = "First difference of the oil extraction",
        x = "Date",                                  
        y = "FD Oil extraction") +
   theme_minimal()   
 ```
 
-# ARMA MODELS
+# PART 2 : ARMA models
 ## Question 4
 
 ```{r, echo=FALSE}
