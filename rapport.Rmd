@@ -1,0 +1,140 @@
+---
+title: 'Linear Time Series Assignment : ARIMA modelling of a time series'
+author: "Solène MORO & Jonas LECHAT"
+date: "2024-04"
+output: html_document
+---
+
+
+
+```{r packages, include=FALSE}
+library(insee)
+library(data.table)
+library(tidyverse)
+library(zoo)
+library(tseries)
+library(fUnitRoots)
+library(astsa)
+library(forecast)
+library(portes)
+library(ggplot2)
+```
+
+```{r données, include=FALSE}
+data = as.data.table(insee::get_insee_idbank("010767581"))
+data=data[,c("DATE", "OBS_VALUE")]
+setnames(data, c("DATE", "extraction_petrole"))
+data<-data[order(as.Date(data$DATE)),]
+```
+
+
+# PART 1: the data
+## Question 1
+
+
+
+
+## Question 2
+
+
+Stationnarité des données brutes ? Il faut inclure une constante et un trend dans le test ADF
+
+```{r}
+summary(lm(extraction_petrole~DATE, data=data))
+```
+
+
+```{r, echo=FALSE, warning=FALSE}
+pp.test(data[,extraction_petrole])
+adfTest(data[,extraction_petrole], type="ct")
+kpss.test(data[,extraction_petrole])
+```
+
+Non stationnaire
+
+Différance stationnaire ?
+
+```{r, echo=FALSE, warning=FALSE}
+pp.test(diff(data[,extraction_petrole]))
+adf.test(diff(data[,extraction_petrole]))
+kpss.test(diff(data[,extraction_petrole]))
+```
+Oui.
+
+## Question 3
+
+```{r, echo=FALSE}
+ggplot(data, aes(x = DATE, y = extraction_petrole)) +
+  geom_line(color = "blue") +  
+  labs(title = "Oil extraction",
+       x = "Date",                                  
+       y = "Oil extraction") +
+  theme_minimal()   
+```
+
+
+```{r, include=FALSE}
+diff_petrole=diff(data[,extraction_petrole])
+data[DATE>"1990-01-01", extraction_petrole_diff:=diff_petrole]
+```
+
+
+```{r, echo=FALSE, warning=FALSE}
+ggplot(data, aes(x = DATE, y = extraction_petrole_diff)) +
+  geom_line(color = "blue") +  
+  labs(title = "First differance of the oil extraction",
+       x = "Date",                                  
+       y = "FD Oil extraction") +
+  theme_minimal()   
+```
+
+# ARMA MODELS
+## Question 4
+
+```{r, echo=FALSE}
+acf(diff(data[,extraction_petrole]))
+pacf(diff(data[,extraction_petrole]))
+```
+
+```{r, include=FALSE}
+for (i in 0:4) {
+  sarima(data[,extraction_petrole], 4,1,i, details= FALSE)
+  sarima(data[,extraction_petrole], 3,1,i, details= FALSE)
+  sarima(data[,extraction_petrole], 2,1,i, details= FALSE)
+  sarima(data[,extraction_petrole], 1,1,i, details= FALSE)
+  sarima(data[,extraction_petrole], 0,1,i, details= FALSE)
+}
+```
+
+```{r, echo=FALSE}
+res20<-sarima(data[,extraction_petrole], 2,1,0, details= FALSE)
+res10<-sarima(data[,extraction_petrole], 1,1,0, details= FALSE)
+res01<-sarima(data[,extraction_petrole], 0,1,1, details= FALSE)
+res23<-sarima(data[,extraction_petrole], 2,1,3, details= FALSE)
+res43<-sarima(data[,extraction_petrole], 4,1,3, details= FALSE)
+```
+
+```{r, echo=FALSE}
+print("ARIMA(2,1,0)")
+LjungBox(res20$fit)
+print("ARIMA(1,1,0)")
+LjungBox(res10$fit)
+print("ARIMA(0,1,1)")
+LjungBox(res01$fit)
+print("ARIMA(2,1,3)")
+LjungBox(res23$fit)
+print("ARIMA(4,1,3)")
+LjungBox(res43$fit)
+```
+"ARIMA(2,1,3)"
+"ARIMA(4,1,3)"
+
+
+```{r}
+AIC(res23$fit)
+AIC(res43$fit)
+
+BIC(res23$fit)
+BIC(res43$fit)
+```
+## Question 5
