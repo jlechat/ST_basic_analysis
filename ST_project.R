@@ -11,6 +11,7 @@ library(astsa)
 library(forecast)
 library(portes)
 library(ellipse)
+library(stargazer)
 
 
 ######################################
@@ -36,7 +37,7 @@ data<-data[order(as.Date(data$DATE)),]
 
 pp.test(data[,oil_extrac])
 adf.test(data[,oil_extrac])
-kpss.test(data[,oil_extrac])
+kpss.test(data[,oil_extrac], null="Trend")
 
 #The serie does not seem stationnary : we try first differance.
 
@@ -44,7 +45,8 @@ kpss.test(data[,oil_extrac])
 
 pp.test(diff(data[,oil_extrac]))
 adf.test(diff(data[,oil_extrac]))
-kpss.test(diff(data[,oil_extrac]))
+kpss.test(diff(data[,oil_extrac]), null="Level")
+
 
 #It is likely stationnary.
 
@@ -89,33 +91,50 @@ for (i in 0:4) {
 }
 
 
-#We decide to reject the model if the p-values of some coefficients are higher than 10%. Thus, we keep for now the following models : 
+#We decide to reject the model if the p-values of some coefficients are higher than 10%. 
+#Thus, we keep for now the following models : 
 
 res20<-sarima(data[,oil_extrac], 2,1,0, details= FALSE)
 res10<-sarima(data[,oil_extrac], 1,1,0, details= FALSE)
-res01<-sarima(data[,oil_extrac], 0,1,1, details= FALSE)
-res23<-sarima(data[,oil_extrac], 2,1,3, details= FALSE)
 res43<-sarima(data[,oil_extrac], 4,1,3, details= FALSE)
+res21<-sarima(data[,oil_extrac], 2,1,1, details= FALSE)
+res32<-sarima(data[,oil_extrac], 3,1,2, details= FALSE)
+res33<-sarima(data[,oil_extrac], 3,1,3, details= FALSE)
 
+#exportation for the report
+stargazer(res20$ttable)
+stargazer(res10$ttable)
+stargazer(res43$ttable)
+stargazer(res21$ttable)
+stargazer(res32$ttable)
+stargazer(res33$ttable)
 
 #Check that the residual are not correlated
-print("ARIMA(2,1,0)")
+print("ARIMA(2,1,0)") #REJECTED
 LjungBox(res20$fit)
-print("ARIMA(1,1,0)")
+print("ARIMA(1,1,0)") #REJECTED
 LjungBox(res10$fit)
-print("ARIMA(0,1,1)")
-LjungBox(res01$fit)
-print("ARIMA(2,1,3)")
-LjungBox(res23$fit)
-print("ARIMA(4,1,3)")
+print("ARIMA(4,1,3)") #ACCEPTED
 LjungBox(res43$fit)
+print("ARIMA(2,1,1)") #REJECTED
+LjungBox(res21$fit)
+print("ARIMA(3,1,2)") #ACEPTED
+LjungBox(res32$fit)
+print("ARIMA(3,1,3)") #REJECTED
+LjungBox(res33$fit)
+
+stargazer(LjungBox(res20$fit))
+stargazer(LjungBox(res10$fit))
+stargazer(LjungBox(res43$fit))
+stargazer(LjungBox(res21$fit))
+stargazer(LjungBox(res32$fit))
+stargazer(LjungBox(res33$fit))
 
 
-
-AIC(res23$fit)
+AIC(res32$fit)
 AIC(res43$fit)
 
-BIC(res23$fit)
+BIC(res32$fit)
 BIC(res43$fit)
 
 
